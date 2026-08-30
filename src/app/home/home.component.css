@@ -1,0 +1,9 @@
+/* Horizontalna lista marki - skriven scrollbar, ali skrolovanje ostaje moguće. */
+.scrollbar-hide {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}

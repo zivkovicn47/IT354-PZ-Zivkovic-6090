@@ -1,0 +1,82 @@
+<div class="min-h-screen bg-gray-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 font-sans">
+  <div class="max-w-md w-full space-y-8 bg-gray-800 p-8 rounded-2xl shadow-xl border border-gray-700">
+
+    <div>
+      <a routerLink="/" class="flex items-center justify-center gap-2 mb-6 text-white hover:opacity-80 transition">
+        <span class="bg-white text-blue-700 p-1.5 rounded-lg">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+            aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+          </svg>
+        </span>
+        <span class="font-bold text-xl tracking-tight">PolovniAutomobili</span>
+      </a>
+
+      <h1 class="text-center text-3xl font-extrabold text-white">
+        {{ isRegisterMode() ? 'Napravi nalog' : 'Prijavi se' }}
+      </h1>
+      <p class="mt-2 text-center text-sm text-gray-400">
+        {{ isRegisterMode() ? 'Pridruži se zajednici' : 'Dobrodošli nazad' }}
+      </p>
+    </div>
+
+    <form #loginForm="ngForm" (ngSubmit)="onSubmit(loginForm.valid === true)" novalidate class="mt-8 space-y-6">
+
+      <div class="space-y-4">
+        <div>
+          <label for="email" class="block text-sm font-medium text-gray-300 mb-1">Email adresa</label>
+          <input id="email" name="email" type="email" autocomplete="email" required email [(ngModel)]="email"
+            #emailField="ngModel" placeholder="ime@primer.com"
+            class="block w-full px-3 py-3 border rounded-md text-white bg-gray-700 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm"
+            [class.border-gray-600]="emailField.valid || emailField.pristine"
+            [class.border-red-500]="emailField.invalid && emailField.touched">
+          @if (emailField.invalid && emailField.touched) {
+          <p class="mt-1 text-xs text-red-400">Unesite ispravnu email adresu.</p>
+          }
+        </div>
+
+        <div>
+          <label for="password" class="block text-sm font-medium text-gray-300 mb-1">Lozinka</label>
+          <input id="password" name="password" type="password"
+            [autocomplete]="isRegisterMode() ? 'new-password' : 'current-password'" required minlength="6"
+            [(ngModel)]="password" #passwordField="ngModel" placeholder="Najmanje 6 karaktera"
+            class="block w-full px-3 py-3 border rounded-md text-white bg-gray-700 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm"
+            [class.border-gray-600]="passwordField.valid || passwordField.pristine"
+            [class.border-red-500]="passwordField.invalid && passwordField.touched">
+          @if (passwordField.invalid && passwordField.touched) {
+          <p class="mt-1 text-xs text-red-400">Lozinka mora imati najmanje 6 karaktera.</p>
+          }
+        </div>
+      </div>
+
+      @if (errorMessage()) {
+      <div class="text-red-300 text-sm text-center bg-red-900/30 border border-red-700 p-3 rounded" role="alert">
+        {{ errorMessage() }}
+      </div>
+      }
+
+      <button type="submit" [disabled]="isLoading() || loginForm.invalid"
+        class="w-full flex justify-center items-center py-3 px-4 text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+        @if (isLoading()) {
+        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none"
+          viewBox="0 0 24 24" aria-hidden="true">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+          </path>
+        </svg>
+        }
+        {{ isRegisterMode() ? 'Registruj se' : 'Prijavi se' }}
+      </button>
+    </form>
+
+    <div class="text-center">
+      <button type="button" (click)="toggleMode()"
+        class="text-sm text-blue-400 hover:text-blue-300 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 rounded px-1">
+        {{ isRegisterMode() ? 'Već imate nalog? Prijavite se' : 'Nemate nalog? Registrujte se' }}
+      </button>
+    </div>
+
+  </div>
+</div>

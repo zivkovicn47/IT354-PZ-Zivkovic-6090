@@ -1,0 +1,264 @@
+<div class="min-h-screen bg-gray-900 font-sans">
+  <app-navbar />
+
+  <div class="py-10 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-3xl mx-auto bg-gray-800 rounded-2xl shadow-xl overflow-hidden border border-gray-700">
+
+      <div class="px-8 py-6 border-b border-gray-700">
+        <h1 class="text-2xl font-bold text-white">
+          {{ isEditMode() ? 'Izmeni oglas' : 'Prodaj automobil' }}
+        </h1>
+        <p class="mt-1 text-gray-400">
+          {{ isEditMode() ? 'Ažurirajte podatke o vozilu.' : 'Popunite detalje o vašem vozilu.' }}
+        </p>
+      </div>
+
+      @if (isLoadingCar()) {
+      <div class="p-16 flex justify-center" aria-live="polite" aria-busy="true">
+        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
+      </div>
+      } @else {
+
+      <form #carForm="ngForm" (ngSubmit)="onSubmit(carForm.valid === true)" novalidate class="p-8 space-y-8">
+
+        @if (errorMessage()) {
+        <div class="bg-red-900/30 border border-red-700 text-red-300 text-sm rounded-lg p-3" role="alert">
+          {{ errorMessage() }}
+        </div>
+        }
+
+        <!-- Osnovne informacije -->
+        <div class="space-y-6">
+          <h2 class="text-lg font-medium text-white border-b border-gray-700 pb-2">Osnovne informacije</h2>
+
+          <div class="grid grid-cols-1 gap-y-6 gap-x-6 sm:grid-cols-2">
+            <div class="sm:col-span-2">
+              <label for="title" class="block text-sm font-medium text-gray-300 mb-1">Naslov oglasa *</label>
+              <input type="text" id="title" name="title" [(ngModel)]="car.title" required minlength="3"
+                maxlength="80" #title="ngModel" placeholder="npr. BMW 320i"
+                class="block w-full bg-gray-700 border rounded-lg py-2.5 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm"
+                [class.border-gray-600]="title.valid || title.pristine"
+                [class.border-red-500]="title.invalid && title.touched">
+              @if (title.invalid && title.touched) {
+              <p class="mt-1 text-xs text-red-400">Naslov je obavezan i mora imati bar 3 karaktera.</p>
+              }
+            </div>
+
+            <div>
+              <label for="price" class="block text-sm font-medium text-gray-300 mb-1">Cena (€) *</label>
+              <input type="number" id="price" name="price" [(ngModel)]="car.price" required min="1" max="100000000"
+                #price="ngModel" placeholder="15000"
+                class="block w-full bg-gray-700 border rounded-lg py-2.5 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm"
+                [class.border-gray-600]="price.valid || price.pristine"
+                [class.border-red-500]="price.invalid && price.touched">
+              @if (price.invalid && price.touched) {
+              <p class="mt-1 text-xs text-red-400">Unesite cenu veću od nule.</p>
+              }
+            </div>
+
+            <div>
+              <label for="categoryId" class="block text-sm font-medium text-gray-300 mb-1">Marka *</label>
+              <select id="categoryId" name="categoryId" [(ngModel)]="car.categoryId" required #category="ngModel"
+                class="block w-full bg-gray-700 border rounded-lg py-2.5 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm"
+                [class.border-gray-600]="category.valid || category.pristine"
+                [class.border-red-500]="category.invalid && category.touched">
+                <option [ngValue]="undefined" disabled>Izaberite marku</option>
+                @for (cat of categories(); track cat.key) {
+                <option [ngValue]="cat.id">{{ cat.title }}</option>
+                }
+              </select>
+              @if (category.invalid && category.touched) {
+              <p class="mt-1 text-xs text-red-400">Izbor marke je obavezan.</p>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Opis i slika -->
+        <div class="space-y-6">
+          <div>
+            <label for="description" class="block text-sm font-medium text-gray-300 mb-1">Opis *</label>
+            <textarea id="description" name="description" rows="4" [(ngModel)]="car.description" required
+              minlength="10" maxlength="1000" #description="ngModel"
+              placeholder="Stanje vozila, oprema, servisna istorija..."
+              class="block w-full bg-gray-700 border rounded-lg py-2.5 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm"
+              [class.border-gray-600]="description.valid || description.pristine"
+              [class.border-red-500]="description.invalid && description.touched"></textarea>
+            @if (description.invalid && description.touched) {
+            <p class="mt-1 text-xs text-red-400">Opis je obavezan i mora imati bar 10 karaktera.</p>
+            }
+          </div>
+
+          <div>
+            <label for="picUrl" class="block text-sm font-medium text-gray-300 mb-1">Link slike (URL) *</label>
+            <input type="url" id="picUrl" name="picUrl" [(ngModel)]="car.picUrl" required
+              pattern="https?://.+" #picUrl="ngModel" placeholder="https://..."
+              class="block w-full bg-gray-700 border rounded-lg py-2.5 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm"
+              [class.border-gray-600]="picUrl.valid || picUrl.pristine"
+              [class.border-red-500]="picUrl.invalid && picUrl.touched">
+            @if (picUrl.invalid && picUrl.touched) {
+            <p class="mt-1 text-xs text-red-400">Unesite ispravan link koji počinje sa http:// ili https://</p>
+            }
+            @if (car.picUrl && picUrl.valid) {
+            <img [src]="car.picUrl" alt="Pregled slike vozila"
+              class="mt-3 h-40 w-full object-cover rounded-lg border border-gray-600">
+            }
+          </div>
+
+          <div>
+            <label for="phone" class="block text-sm font-medium text-gray-300 mb-1">
+              Kontakt telefon <span class="text-gray-500">(opciono)</span>
+            </label>
+            <input type="tel" id="phone" name="phone" [(ngModel)]="car.phone" maxlength="30"
+              placeholder="npr. 060 123 4567"
+              class="block w-full bg-gray-700 border border-gray-600 rounded-lg py-2.5 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm">
+            <p class="mt-1 text-xs text-gray-500">Prikazuje se na dugmetu "Pozovi prodavca" u detaljima oglasa.</p>
+          </div>
+        </div>
+
+        <!-- Tehničke specifikacije -->
+        <div class="space-y-6">
+          <h2 class="text-lg font-medium text-white border-b border-gray-700 pb-2">Tehničke specifikacije</h2>
+
+          <div class="grid grid-cols-1 gap-y-6 gap-x-6 sm:grid-cols-2 lg:grid-cols-3">
+
+            <div>
+              <label for="enginePower" class="block text-sm font-medium text-gray-300 mb-1">Snaga (HP) *</label>
+              <input type="number" id="enginePower" name="enginePower" [(ngModel)]="car.enginePower" required min="1"
+                max="2000" #enginePower="ngModel" placeholder="150"
+                class="block w-full bg-gray-700 border rounded-lg py-2.5 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm"
+                [class.border-gray-600]="enginePower.valid || enginePower.pristine"
+                [class.border-red-500]="enginePower.invalid && enginePower.touched">
+              @if (enginePower.invalid && enginePower.touched) {
+              <p class="mt-1 text-xs text-red-400">Unesite vrednost između 1 i 2000.</p>
+              }
+            </div>
+
+            <div>
+              <label for="engineVolume" class="block text-sm font-medium text-gray-300 mb-1">Zapremina (cm³) *</label>
+              <input type="number" id="engineVolume" name="engineVolume" [(ngModel)]="car.engineVolume" required
+                min="0" max="10000" #engineVolume="ngModel" placeholder="1998"
+                class="block w-full bg-gray-700 border rounded-lg py-2.5 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm"
+                [class.border-gray-600]="engineVolume.valid || engineVolume.pristine"
+                [class.border-red-500]="engineVolume.invalid && engineVolume.touched">
+              @if (engineVolume.invalid && engineVolume.touched) {
+              <p class="mt-1 text-xs text-red-400">Obavezno polje (0 za električna vozila).</p>
+              }
+            </div>
+
+            <div>
+              <label for="highestSpeed" class="block text-sm font-medium text-gray-300 mb-1">Maks. brzina (km/h)
+                *</label>
+              <input type="number" id="highestSpeed" name="highestSpeed" [(ngModel)]="car.highestSpeed" required
+                min="1" max="600" #highestSpeed="ngModel" placeholder="235"
+                class="block w-full bg-gray-700 border rounded-lg py-2.5 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm"
+                [class.border-gray-600]="highestSpeed.valid || highestSpeed.pristine"
+                [class.border-red-500]="highestSpeed.invalid && highestSpeed.touched">
+              @if (highestSpeed.invalid && highestSpeed.touched) {
+              <p class="mt-1 text-xs text-red-400">Unesite vrednost između 1 i 600.</p>
+              }
+            </div>
+
+            <div>
+              <label for="productionYear" class="block text-sm font-medium text-gray-300 mb-1">Godište *</label>
+              <input type="number" id="productionYear" name="productionYear" [(ngModel)]="car.productionYear" required
+                min="1950" [max]="currentYear + 1" #productionYear="ngModel" placeholder="2019"
+                class="block w-full bg-gray-700 border rounded-lg py-2.5 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm"
+                [class.border-gray-600]="productionYear.valid || productionYear.pristine"
+                [class.border-red-500]="productionYear.invalid && productionYear.touched">
+              @if (productionYear.invalid && productionYear.touched) {
+              <p class="mt-1 text-xs text-red-400">Unesite godište između 1950. i {{ currentYear + 1 }}.</p>
+              }
+            </div>
+
+            <div>
+              <label for="mileage" class="block text-sm font-medium text-gray-300 mb-1">Kilometraža (km) *</label>
+              <input type="number" id="mileage" name="mileage" [(ngModel)]="car.mileage" required min="0"
+                max="2000000" #mileage="ngModel" placeholder="95000"
+                class="block w-full bg-gray-700 border rounded-lg py-2.5 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm"
+                [class.border-gray-600]="mileage.valid || mileage.pristine"
+                [class.border-red-500]="mileage.invalid && mileage.touched">
+              @if (mileage.invalid && mileage.touched) {
+              <p class="mt-1 text-xs text-red-400">Obavezno polje.</p>
+              }
+            </div>
+
+            <div>
+              <label for="seats" class="block text-sm font-medium text-gray-300 mb-1">Broj sedišta *</label>
+              <input type="number" id="seats" name="seats" [(ngModel)]="car.seats" required min="1" max="9"
+                #seats="ngModel" placeholder="5"
+                class="block w-full bg-gray-700 border rounded-lg py-2.5 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm"
+                [class.border-gray-600]="seats.valid || seats.pristine"
+                [class.border-red-500]="seats.invalid && seats.touched">
+              @if (seats.invalid && seats.touched) {
+              <p class="mt-1 text-xs text-red-400">Unesite broj između 1 i 9.</p>
+              }
+            </div>
+
+            <div>
+              <label for="fuelType" class="block text-sm font-medium text-gray-300 mb-1">Gorivo *</label>
+              <select id="fuelType" name="fuelType" [(ngModel)]="car.fuelType" required #fuelType="ngModel"
+                class="block w-full bg-gray-700 border rounded-lg py-2.5 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm"
+                [class.border-gray-600]="fuelType.valid || fuelType.pristine"
+                [class.border-red-500]="fuelType.invalid && fuelType.touched">
+                <option value="" disabled>Izaberite gorivo</option>
+                @for (fuel of fuelTypes; track fuel) {
+                <option [value]="fuel">{{ fuel }}</option>
+                }
+              </select>
+              @if (fuelType.invalid && fuelType.touched) {
+              <p class="mt-1 text-xs text-red-400">Obavezno polje.</p>
+              }
+            </div>
+
+            <div>
+              <label for="transmission" class="block text-sm font-medium text-gray-300 mb-1">Menjač *</label>
+              <select id="transmission" name="transmission" [(ngModel)]="car.transmission" required
+                #transmission="ngModel"
+                class="block w-full bg-gray-700 border rounded-lg py-2.5 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm"
+                [class.border-gray-600]="transmission.valid || transmission.pristine"
+                [class.border-red-500]="transmission.invalid && transmission.touched">
+                <option value="" disabled>Izaberite menjač</option>
+                @for (type of transmissionTypes; track type) {
+                <option [value]="type">{{ type }}</option>
+                }
+              </select>
+              @if (transmission.invalid && transmission.touched) {
+              <p class="mt-1 text-xs text-red-400">Obavezno polje.</p>
+              }
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Akcije -->
+        <div class="pt-6 border-t border-gray-700 flex flex-col sm:flex-row gap-3">
+          <button type="submit" [disabled]="isSaving() || carForm.invalid"
+            class="flex-1 flex justify-center items-center py-3.5 px-4 rounded-lg shadow-lg text-sm font-bold text-white bg-green-600 hover:bg-green-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+            @if (isSaving()) {
+            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none"
+              viewBox="0 0 24 24" aria-hidden="true">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+              </path>
+            </svg>
+            }
+            {{ isEditMode() ? 'Sačuvaj izmene' : 'Postavi oglas' }}
+          </button>
+
+          <button type="button" (click)="cancel()"
+            class="sm:w-40 py-3.5 px-4 rounded-lg text-sm font-bold text-gray-300 bg-gray-700 hover:bg-gray-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 transition-all">
+            Odustani
+          </button>
+        </div>
+
+        @if (carForm.invalid && carForm.touched) {
+        <p class="text-xs text-gray-400 text-center">Popunite sva obavezna polja označena zvezdicom (*).</p>
+        }
+
+      </form>
+      }
+    </div>
+  </div>
+</div>

@@ -1,0 +1,112 @@
+<div class="min-h-screen bg-gray-100 flex flex-col font-sans">
+
+  <app-navbar />
+
+  <main class="flex-1 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+
+    <div class="flex flex-wrap gap-4 justify-between items-end mb-6 border-b border-gray-200 pb-3">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-800">Moji oglasi</h1>
+        <p class="text-sm text-gray-500 mt-1">Oglasi postavljeni sa ovog naloga - iz web ili Android aplikacije.</p>
+      </div>
+      @if (myCars().length) {
+      <div class="text-right">
+        <p class="text-sm text-gray-500">Ukupna vrednost</p>
+        <p class="text-xl font-extrabold text-blue-700">{{ totalValue() | number }} €</p>
+      </div>
+      }
+    </div>
+
+    @if (actionError()) {
+    <div class="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg p-3 mb-4" role="alert">
+      {{ actionError() }}
+    </div>
+    }
+
+    @if (isLoading()) {
+    <div class="space-y-4" aria-live="polite" aria-busy="true">
+      @for (placeholder of [1, 2, 3]; track placeholder) {
+      <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex gap-4 animate-pulse">
+        <div class="h-24 w-32 bg-gray-200 rounded-lg"></div>
+        <div class="flex-1 space-y-3 py-2">
+          <div class="h-4 bg-gray-200 rounded w-1/3"></div>
+          <div class="h-4 bg-gray-200 rounded w-1/4"></div>
+        </div>
+      </div>
+      }
+    </div>
+    } @else if (loadError()) {
+    <div class="text-center py-16 bg-white rounded-xl shadow-sm border border-red-200" role="alert">
+      <div class="text-5xl mb-4">⚠️</div>
+      <h2 class="text-xl font-medium text-gray-900 mb-2">Podaci nisu učitani</h2>
+      <p class="text-gray-500">Proverite internet konekciju i osvežite stranicu.</p>
+    </div>
+    } @else if (myCars().length === 0) {
+    <div class="text-center py-16 bg-white rounded-xl shadow-sm border border-gray-200">
+      <div class="text-6xl mb-4">📭</div>
+      <h2 class="text-xl font-medium text-gray-900 mb-2">Još nemate oglasa</h2>
+      <p class="text-gray-500 max-w-sm mx-auto mb-6">Postavite prvi oglas i biće odmah vidljiv i u Android aplikaciji.
+      </p>
+      <a routerLink="/add-car"
+        class="inline-block px-6 py-2.5 bg-green-600 text-white rounded-full font-medium hover:bg-green-700 transition shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500">
+        Postavi oglas
+      </a>
+    </div>
+    } @else {
+    <ul class="space-y-4 list-none p-0 m-0">
+      @for (car of myCars(); track car.id) {
+      <li class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex flex-col sm:flex-row gap-4">
+        <img [src]="car.picUrl" [alt]="car.title" loading="lazy"
+          class="h-32 sm:h-24 w-full sm:w-32 object-cover rounded-lg bg-gray-200 flex-shrink-0">
+
+        <div class="flex-1 min-w-0">
+          <h2 class="font-bold text-gray-900 text-lg truncate">{{ car.title }}</h2>
+          <p class="text-blue-700 font-extrabold">{{ car.price | number }} €</p>
+          <p class="text-xs text-gray-500 mt-1">
+            {{ car.productionYear }} · {{ car.mileage | number }} km · {{ car.fuelType }}
+          </p>
+        </div>
+
+        <div class="flex sm:flex-col gap-2 justify-end">
+          <a [routerLink]="['/ad', car.id]"
+            class="px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-400">
+            Prikaži
+          </a>
+          <a [routerLink]="['/edit-car', car.id]"
+            class="px-4 py-2 text-sm font-medium rounded-lg bg-amber-500 text-white hover:bg-amber-600 transition text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400">
+            Izmeni
+          </a>
+          <button type="button" (click)="pendingDelete.set(car)"
+            class="px-4 py-2 text-sm font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400">
+            Obriši
+          </button>
+        </div>
+      </li>
+      }
+    </ul>
+    }
+
+    @if (pendingDelete(); as car) {
+    <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true"
+      aria-labelledby="my-ads-delete-title">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+        <h2 id="my-ads-delete-title" class="text-xl font-bold text-gray-900 mb-2">Brisanje oglasa</h2>
+        <p class="text-gray-600 mb-6">
+          Trajno obrisati oglas "{{ car.title }}"? Nestaće i iz Android aplikacije.
+        </p>
+        <div class="flex gap-3">
+          <button type="button" (click)="confirmDelete()" [disabled]="isDeleting()"
+            class="flex-1 bg-red-600 text-white font-bold py-3 rounded-lg hover:bg-red-700 disabled:opacity-50 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400">
+            {{ isDeleting() ? 'Brisanje...' : 'Da, obriši' }}
+          </button>
+          <button type="button" (click)="pendingDelete.set(null)" [disabled]="isDeleting()"
+            class="flex-1 bg-gray-200 text-gray-800 font-bold py-3 rounded-lg hover:bg-gray-300 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-400">
+            Odustani
+          </button>
+        </div>
+      </div>
+    </div>
+    }
+
+  </main>
+</div>
